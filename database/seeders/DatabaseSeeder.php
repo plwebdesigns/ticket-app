@@ -15,6 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        Role::create([
+            'name' => 'admin',
+            'description' => 'Administrator',
+        ]);
+
+        Role::create([
+            'name' => 'user',
+            'description' => 'User',
+        ]);
+
         User::factory()->create([
             'name' => 'Paul Longo',
             'email' => 'paullongo@outlook.com',
