@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import { Form, Head, Link, setLayoutProps } from '@inertiajs/vue3';
-import { computed, ref, watchEffect } from 'vue';
+import { computed, ref, watch, watchEffect } from 'vue';
 import { show as attachmentShow, destroy as attachmentDestroy } from '@/actions/App/Http/Controllers/AttachmentController';
 import Heading from '@/components/Heading.vue';
 import TicketEditDialog from '@/components/issues/TicketEditDialog.vue';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { index as issuesIndex, show as issuesShow } from '@/routes/issues';
 
 type SlugRow = {
@@ -57,6 +66,8 @@ const props = defineProps<{
 }>();
 
 const editOpen = ref(false);
+const attachmentOptionsOpen = ref(false);
+const selectedPdfAttachment = ref<AttachmentRef | null>(null);
 
 const ticketForEdit = computed(() => ({
     id: props.ticket.id,
@@ -103,6 +114,66 @@ function formatFileSize(bytes: number): string {
 
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+const selectedAttachmentDownloadUrl = computed(() => {
+    if (!selectedPdfAttachment.value) {
+        return '#';
+    }
+
+    return attachmentShow.url(selectedPdfAttachment.value);
+});
+
+const selectedAttachmentInlineUrl = computed(() => {
+    if (!selectedPdfAttachment.value) {
+        return '#';
+    }
+
+    return attachmentShow.url(selectedPdfAttachment.value, { query: { inline: 1 } });
+});
+
+function isPdfAttachment(attachment: AttachmentRef): boolean {
+    const mimeType = attachment.mime_type.toLowerCase();
+
+    if (mimeType === 'application/pdf') {
+        return true;
+    }
+
+    return attachment.filename.toLowerCase().endsWith('.pdf');
+}
+
+function onAttachmentClick(event: MouseEvent, attachment: AttachmentRef): void {
+    if (!isPdfAttachment(attachment)) {
+        return;
+    }
+
+    event.preventDefault();
+    selectedPdfAttachment.value = attachment;
+    attachmentOptionsOpen.value = true;
+}
+
+function viewSelectedPdfInBrowser(): void {
+    if (!selectedPdfAttachment.value) {
+        return;
+    }
+
+    window.open(selectedAttachmentInlineUrl.value, '_blank', 'noopener,noreferrer');
+    attachmentOptionsOpen.value = false;
+}
+
+function downloadSelectedAttachment(): void {
+    if (!selectedPdfAttachment.value) {
+        return;
+    }
+
+    window.open(selectedAttachmentDownloadUrl.value, '_blank', 'noopener,noreferrer');
+    attachmentOptionsOpen.value = false;
+}
+
+watch(attachmentOptionsOpen, (isOpen) => {
+    if (!isOpen) {
+        selectedPdfAttachment.value = null;
+    }
+});
 </script>
 
 <template>
@@ -119,6 +190,37 @@ function formatFileSize(bytes: number): string {
             :priorities="props.priorities"
             @saved="editOpen = false"
         />
+
+        <Dialog v-model:open="attachmentOptionsOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Attachment options</DialogTitle>
+                    <DialogDescription>
+                        Choose how to open {{ selectedPdfAttachment?.filename ?? 'this PDF' }}.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter class="gap-2 sm:justify-end">
+                    <DialogClose as-child>
+                        <Button type="button" variant="secondary">
+                            Cancel
+                        </Button>
+                    </DialogClose>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        @click="downloadSelectedAttachment"
+                    >
+                        Download
+                    </Button>
+                    <Button
+                        type="button"
+                        @click="viewSelectedPdfInBrowser"
+                    >
+                        View PDF in browser
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
         <div
             class="flex flex-col space-y-6 p-4 md:p-6"
@@ -254,6 +356,7 @@ function formatFileSize(bytes: number): string {
                         <div class="min-w-0">
                             <a
                                 :href="attachmentShow.url(attachment)"
+                                @click="onAttachmentClick($event, attachment)"
                                 class="truncate text-sm font-medium text-primary underline-offset-4 hover:underline"
                             >
                                 {{ attachment.filename }}

@@ -51,6 +51,45 @@ class AttachmentTest extends TestCase
             ->assertDownload('report.pdf');
     }
 
+    public function test_authenticated_user_can_view_a_pdf_attachment_inline(): void
+    {
+        Storage::fake();
+
+        $attachment = Attachment::factory()->create([
+            'path' => 'attachments/test/report.pdf',
+            'filename' => 'report.pdf',
+            'mime_type' => 'application/pdf',
+        ]);
+
+        Storage::put($attachment->path, 'file-contents');
+
+        $response = $this->actingAs(User::factory()->create())
+            ->get(route('attachments.show', ['attachment' => $attachment, 'inline' => 1]));
+
+        $response->assertOk();
+
+        $this->assertStringStartsWith('inline;', (string) $response->headers->get('content-disposition'));
+        $this->assertStringStartsWith('application/pdf', (string) $response->headers->get('content-type'));
+    }
+
+    public function test_non_pdf_attachment_with_inline_query_still_downloads(): void
+    {
+        Storage::fake();
+
+        $attachment = Attachment::factory()->create([
+            'path' => 'attachments/test/screenshot.png',
+            'filename' => 'screenshot.png',
+            'mime_type' => 'image/png',
+        ]);
+
+        Storage::put($attachment->path, 'file-contents');
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('attachments.show', ['attachment' => $attachment, 'inline' => 1]))
+            ->assertOk()
+            ->assertDownload('screenshot.png');
+    }
+
     public function test_authenticated_user_can_delete_an_attachment(): void
     {
         Storage::fake();
