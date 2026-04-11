@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
 
 class TicketController extends Controller
 {
@@ -76,9 +77,9 @@ class TicketController extends Controller
         return back(fallback: to_route('issues.show', $ticket));
     }
 
-    public function destroy(Ticket $ticket): RedirectResponse
+    public function destroy(Request $request, Ticket $ticket): RedirectResponse
     {
-        $ticket->deleted_by_id = auth()->id();
+        $ticket->deleted_by_id = $request->user()->id;
         $ticket->save();
         $ticket->delete();
 
