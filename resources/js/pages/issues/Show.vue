@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, setLayoutProps } from '@inertiajs/vue3';
+import { Form, Head, Link, setLayoutProps } from '@inertiajs/vue3';
 import { computed, ref, watchEffect } from 'vue';
+import { show as attachmentShow, destroy as attachmentDestroy } from '@/actions/App/Http/Controllers/AttachmentController';
 import Heading from '@/components/Heading.vue';
 import TicketEditDialog from '@/components/issues/TicketEditDialog.vue';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,13 @@ type SlugRow = {
     name: string;
     description: string | null;
     slug: string;
+};
+
+type AttachmentRef = {
+    id: string;
+    filename: string;
+    mime_type: string;
+    size: number;
 };
 
 type UserRef = {
@@ -37,6 +45,7 @@ type TicketDetail = {
     assigned_to: UserRef | null;
     created_by: UserRef | null;
     updated_by: UserRef | null;
+    attachments: AttachmentRef[];
 };
 
 const props = defineProps<{
@@ -83,6 +92,17 @@ function formatWhen(iso: string | null): string {
 
     return new Date(iso).toLocaleString();
 }
+
+function formatFileSize(bytes: number): string {
+    if (bytes < 1024) {
+        return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 </script>
 
 <template>
@@ -92,6 +112,7 @@ function formatWhen(iso: string | null): string {
         <TicketEditDialog
             v-model:open="editOpen"
             :ticket="ticketForEdit"
+            :attachments="ticket.attachments"
             :types="props.types"
             :current-states="props.currentStates"
             :users="props.users"
@@ -215,6 +236,49 @@ function formatWhen(iso: string | null): string {
                         </div>
                     </dl>
                 </div>
+            </div>
+
+            <div
+                v-if="ticket.attachments.length > 0"
+                class="rounded-xl border border-border p-6"
+            >
+                <p class="mb-4 text-xs font-medium uppercase text-muted-foreground">
+                    Attachments
+                </p>
+                <ul class="divide-y divide-border">
+                    <li
+                        v-for="attachment in ticket.attachments"
+                        :key="attachment.id"
+                        class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                    >
+                        <div class="min-w-0">
+                            <a
+                                :href="attachmentShow.url(attachment)"
+                                class="truncate text-sm font-medium text-primary underline-offset-4 hover:underline"
+                            >
+                                {{ attachment.filename }}
+                            </a>
+                            <p class="text-xs text-muted-foreground">
+                                {{ formatFileSize(attachment.size) }}
+                            </p>
+                        </div>
+                        <Form
+                            v-bind="attachmentDestroy.form(attachment)"
+                            :options="{ preserveScroll: true }"
+                            class="shrink-0"
+                            v-slot="{ processing }"
+                        >
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                size="sm"
+                                :disabled="processing"
+                            >
+                                Delete
+                            </Button>
+                        </Form>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
