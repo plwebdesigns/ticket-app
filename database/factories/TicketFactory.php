@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
-use App\Models\Ticket;
-use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\Type;
-use App\Models\CurrentState;
 use App\Enums\Priority;
+use App\Models\CurrentState;
+use App\Models\Ticket;
+use App\Models\Type;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends Factory<Ticket>
@@ -32,9 +32,9 @@ class TicketFactory extends Factory
             'assigned_to_id' => User::factory(),
             'created_by_id' => User::factory(),
             'updated_by_id' => User::factory(),
-            'deleted_by_id' => User::factory(),
-            'deleted_at' => fake()->optional()->dateTime(),
-            'resolved_at' => fake()->optional()->dateTime(),
+            'deleted_by_id' => null,
+            'deleted_at' => null,
+            'resolved_at' => null,
         ];
     }
 }
