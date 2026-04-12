@@ -28,6 +28,7 @@ class TicketController extends Controller
             'createdBy',
             'updatedBy',
             'attachments',
+            'comments' => fn ($query) => $query->with('user')->oldest(),
         ]);
 
         return Inertia::render('issues/Show', [

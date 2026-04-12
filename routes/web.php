@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -18,6 +19,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('attachments/{attachment}', [AttachmentController::class, 'show'])->name('attachments.show');
     Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
+
+    Route::post('issues/{ticket}/comments', [CommentController::class, 'store'])->name('comments.store');
 });
 
 require __DIR__.'/settings.php';
