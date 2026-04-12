@@ -146,6 +146,16 @@ defineOptions({
                                 <InputError :message="errors.subject" />
                             </div>
                             <div class="grid gap-2">
+                                <Label for="ticket-attachments">Attachments</Label>
+                                <Input
+                                    id="ticket-attachments"
+                                    name="attachments"
+                                    type="file"
+                                    multiple
+                                />
+                                <InputError :message="errors.attachments" />
+                            </div>
+                            <div class="grid gap-2">
                                 <Label for="ticket-description">Description</Label>
                                 <textarea
                                     id="ticket-description"
@@ -294,7 +304,7 @@ defineOptions({
             <div class="overflow-x-auto rounded-md border">
                 <table class="w-full text-left text-sm">
                     <thead
-                        class="border-b bg-muted/50 text-xs font-medium uppercase text-muted-foreground"
+                        class="border-b bg-chart-3 text-xs font-medium uppercase text-primary-foreground"
                     >
                         <tr>
                             <th class="px-4 py-3">Number</th>

@@ -10,11 +10,11 @@ use App\Models\Ticket;
 use App\Models\Type;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\Request;
 
 class TicketController extends Controller
 {
@@ -27,6 +27,7 @@ class TicketController extends Controller
             'assignedTo',
             'createdBy',
             'updatedBy',
+            'attachments',
         ]);
 
         return Inertia::render('issues/Show', [
@@ -40,6 +41,7 @@ class TicketController extends Controller
         return Inertia::render('issues/Index', [
             'tickets' => Ticket::query()
                 ->with(['type', 'currentState', 'requestedBy', 'assignedTo'])
+                ->withCount('attachments')
                 ->latest()
                 ->paginate(15),
             ...$this->ticketFormLookups(),
@@ -50,7 +52,7 @@ class TicketController extends Controller
     {
         DB::transaction(function () use ($request): void {
             $ticket = Ticket::query()->create([
-                ...$request->validated(),
+                ...$request->safe()->except('attachments'),
                 'ticket_number' => 'TKT-TEMP-'.Str::uuid()->toString(),
                 'created_by_id' => $request->user()->id,
                 'updated_by_id' => $request->user()->id,
@@ -58,6 +60,8 @@ class TicketController extends Controller
             $ticket->update([
                 'ticket_number' => 'TKT-'.str_pad((string) $ticket->id, 8, '0', STR_PAD_LEFT),
             ]);
+
+            $this->storeAttachments($request, $ticket);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket created.')]);
@@ -67,10 +71,14 @@ class TicketController extends Controller
 
     public function update(UpdateTicketRequest $request, Ticket $ticket): RedirectResponse
     {
-        $ticket->update([
-            ...$request->validated(),
-            'updated_by_id' => $request->user()->id,
-        ]);
+        DB::transaction(function () use ($request, $ticket): void {
+            $ticket->update([
+                ...$request->safe()->except('attachments'),
+                'updated_by_id' => $request->user()->id,
+            ]);
+
+            $this->storeAttachments($request, $ticket);
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket updated.')]);
 
@@ -86,6 +94,27 @@ class TicketController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket deleted.')]);
 
         return to_route('issues.index');
+    }
+
+    private function storeAttachments(StoreTicketRequest|UpdateTicketRequest $request, Ticket $ticket): void
+    {
+        if (! $request->hasFile('attachments')) {
+            return;
+        }
+
+        $files = $request->file('attachments');
+        $files = is_array($files) ? $files : [$files];
+
+        foreach ($files as $file) {
+            $path = $file->store("attachments/{$ticket->id}");
+
+            $ticket->attachments()->create([
+                'filename' => $file->getClientOriginalName(),
+                'path' => $path,
+                'mime_type' => $file->getClientMimeType(),
+                'size' => $file->getSize(),
+            ]);
+        }
     }
 
     /**

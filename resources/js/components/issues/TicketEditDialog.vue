@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import { destroy as attachmentDestroy } from '@/actions/App/Http/Controllers/AttachmentController';
 import TicketController from '@/actions/App/Http/Controllers/TicketController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -42,8 +43,16 @@ export type TicketEditable = {
     assigned_to_id: number | null;
 };
 
+export type AttachmentRef = {
+    id: string;
+    filename: string;
+    mime_type: string;
+    size: number;
+};
+
 const props = defineProps<{
     ticket: TicketEditable | null;
+    attachments?: AttachmentRef[];
     types: SlugRow[];
     currentStates: SlugRow[];
     users: UserOption[];
@@ -70,6 +79,17 @@ watch(
 
 function onSuccess(): void {
     emit('saved');
+}
+
+function formatFileSize(bytes: number): string {
+    if (bytes < 1024) {
+        return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 </script>
 
@@ -251,6 +271,51 @@ function onSuccess(): void {
                         </option>
                     </select>
                     <InputError :message="errors.assigned_to_id" />
+                </div>
+                <div class="grid gap-2">
+                    <Label :for="`edit-attachments-${ticket.id}`">Add attachments</Label>
+                    <Input
+                        :id="`edit-attachments-${ticket.id}`"
+                        name="attachments"
+                        type="file"
+                        multiple
+                    />
+                    <InputError :message="errors.attachments" />
+                </div>
+                <div
+                    v-if="props.attachments && props.attachments.length > 0"
+                    class="grid gap-2"
+                >
+                    <Label>Existing attachments</Label>
+                    <ul class="divide-y divide-border rounded-md border">
+                        <li
+                            v-for="attachment in props.attachments"
+                            :key="attachment.id"
+                            class="flex items-center justify-between gap-3 px-3 py-2"
+                        >
+                            <span class="min-w-0 truncate text-sm">
+                                {{ attachment.filename }}
+                                <span class="text-muted-foreground">
+                                    ({{ formatFileSize(attachment.size) }})
+                                </span>
+                            </span>
+                            <Form
+                                v-bind="attachmentDestroy.form(attachment)"
+                                :options="{ preserveScroll: true }"
+                                class="shrink-0"
+                                v-slot="{ processing: deleting }"
+                            >
+                                <Button
+                                    type="submit"
+                                    variant="destructive"
+                                    size="sm"
+                                    :disabled="deleting"
+                                >
+                                    Remove
+                                </Button>
+                            </Form>
+                        </li>
+                    </ul>
                 </div>
                 <DialogFooter class="gap-2">
                     <DialogClose as-child>
