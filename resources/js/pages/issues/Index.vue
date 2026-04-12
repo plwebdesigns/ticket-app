@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { index as issuesIndex, show as issuesShow } from '@/routes/issues';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type SlugRow = {
     id: number;
@@ -173,117 +174,62 @@ defineOptions({
                             </div>
                             <div class="grid gap-2">
                                 <Label for="ticket-type">Type</Label>
-                                <select
-                                    id="ticket-type"
-                                    name="type_id"
-                                    required
-                                    :class="
-                                        cn(
-                                            'border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none',
-                                            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                        )
-                                    "
-                                >
-                                    <option
-                                        v-for="t in props.types"
-                                        :key="t.id"
-                                        :value="t.id"
-                                    >
-                                        {{ t.name }}
-                                    </option>
-                                </select>
+                                <Select name="type_id" required>
+                                    <SelectTrigger class="w-full">
+                                        <SelectValue placeholder="Select a type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="t in props.types" :key="t.id" :value="t.id">{{ t.name }}</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <InputError :message="errors.type_id" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="ticket-state">Current state</Label>
-                                <select
-                                    id="ticket-state"
-                                    name="current_state_id"
-                                    required
-                                    :class="
-                                        cn(
-                                            'border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none',
-                                            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                        )
-                                    "
-                                >
-                                    <option
-                                        v-for="s in props.currentStates"
-                                        :key="s.id"
-                                        :value="s.id"
-                                    >
-                                        {{ s.name }}
-                                    </option>
-                                </select>
+                                <Select name="current_state_id" required>
+                                    <SelectTrigger class="w-full">
+                                        <SelectValue placeholder="Select a state" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="s in props.currentStates" :key="s.id" :value="s.id">{{ s.name }}</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <InputError :message="errors.current_state_id" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="ticket-priority">Priority</Label>
-                                <select
-                                    id="ticket-priority"
-                                    name="priority"
-                                    required
-                                    :class="
-                                        cn(
-                                            'border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none',
-                                            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                        )
-                                    "
-                                >
-                                    <option
-                                        v-for="p in props.priorities"
-                                        :key="p"
-                                        :value="p"
-                                    >
-                                        {{ p }}
-                                    </option>
-                                </select>
+                                <Select name="priority" required>
+                                    <SelectTrigger class="w-full">
+                                        <SelectValue placeholder="Select a priority" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="p in props.priorities" :key="p" :value="p">{{ p }}</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <InputError :message="errors.priority" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="ticket-requested">Requested by</Label>
-                                <select
-                                    id="ticket-requested"
-                                    name="requested_by_id"
-                                    :class="
-                                        cn(
-                                            'border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none',
-                                            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                        )
-                                    "
-                                >
-                                    <option value="">—</option>
-                                    <option
-                                        v-for="u in props.users"
-                                        :key="u.id"
-                                        :value="u.id"
-                                    >
-                                        {{ u.name }} ({{ u.email }})
-                                    </option>
-                                </select>
+                                <Select name="requested_by_id">
+                                    <SelectTrigger class="w-full">
+                                        <SelectValue placeholder="Select a requested by" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="u in props.users" :key="u.id" :value="u.id">{{ u.name }} ({{ u.email }})</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <InputError :message="errors.requested_by_id" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="ticket-assigned">Assigned to</Label>
-                                <select
-                                    id="ticket-assigned"
-                                    name="assigned_to_id"
-                                    :class="
-                                        cn(
-                                            'border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none',
-                                            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                        )
-                                    "
-                                >
-                                    <option value="">—</option>
-                                    <option
-                                        v-for="u in props.users"
-                                        :key="`a-${u.id}`"
-                                        :value="u.id"
-                                    >
-                                        {{ u.name }} ({{ u.email }})
-                                    </option>
-                                </select>
+                                <Select name="assigned_to_id">
+                                    <SelectTrigger class="w-full">
+                                        <SelectValue placeholder="Select a assigned to" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="u in props.users" :key="u.id" :value="u.id">{{ u.name }} ({{ u.email }})</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <InputError :message="errors.assigned_to_id" />
                             </div>
                             <DialogFooter class="gap-2">
