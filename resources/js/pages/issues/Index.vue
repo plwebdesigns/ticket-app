@@ -72,15 +72,28 @@ const props = defineProps<{
 const createOpen = ref(false);
 const editOpen = ref(false);
 const editingTicket = ref<TicketRow | null>(null);
+const deleteOpen = ref(false);
+const deletingTicket = ref<TicketRow | null>(null);
 
 function openEdit(ticket: TicketRow): void {
     editingTicket.value = ticket;
     editOpen.value = true;
 }
 
+function openDelete(ticket: TicketRow): void {
+    deletingTicket.value = ticket;
+    deleteOpen.value = true;
+}
+
 watch(editOpen, (isOpen) => {
     if (!isOpen) {
         editingTicket.value = null;
+    }
+});
+
+watch(deleteOpen, (isOpen) => {
+    if (!isOpen) {
+        deletingTicket.value = null;
     }
 });
 
@@ -247,6 +260,44 @@ defineOptions({
                 </Dialog>
             </div>
 
+            <Dialog v-model:open="deleteOpen">
+                <DialogContent class="sm:max-w-md">
+                    <Form
+                        v-if="deletingTicket"
+                        v-bind="TicketController.destroy.form(deletingTicket)"
+                        :options="{ preserveScroll: true }"
+                        @success="deleteOpen = false"
+                        v-slot="{ processing }"
+                    >
+                        <DialogHeader>
+                            <DialogTitle>Delete ticket?</DialogTitle>
+                            <DialogDescription>
+                                This will permanently delete
+                                {{ deletingTicket.ticket_number }} ({{ deletingTicket.subject }}).
+                                This action cannot be undone.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter class="gap-2 sm:justify-end">
+                            <DialogClose as-child>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                >
+                                    Cancel
+                                </Button>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                :disabled="processing"
+                            >
+                                Delete ticket
+                            </Button>
+                        </DialogFooter>
+                    </Form>
+                </DialogContent>
+            </Dialog>
+
             <div class="overflow-x-auto rounded-md border">
                 <table class="w-full text-left text-sm">
                     <thead
@@ -301,25 +352,14 @@ defineOptions({
                                     >
                                         Edit
                                     </Button>
-                                    <Form
-                                        v-bind="
-                                            TicketController.destroy.form(ticket)
-                                        "
-                                        :options="{
-                                            preserveScroll: true,
-                                        }"
-                                        class="inline"
-                                        v-slot="{ processing }"
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="sm"
+                                        @click="openDelete(ticket)"
                                     >
-                                        <Button
-                                            type="submit"
-                                            variant="destructive"
-                                            size="sm"
-                                            :disabled="processing"
-                                        >
-                                            Delete
-                                        </Button>
-                                    </Form>
+                                        Delete
+                                    </Button>
                                 </div>
                             </td>
                         </tr>
