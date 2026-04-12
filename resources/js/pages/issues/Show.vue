@@ -2,8 +2,10 @@
 import { Form, Head, Link, setLayoutProps } from '@inertiajs/vue3';
 import { computed, ref, watch, watchEffect } from 'vue';
 import { show as attachmentShow, destroy as attachmentDestroy } from '@/actions/App/Http/Controllers/AttachmentController';
+import CommentController from '@/actions/App/Http/Controllers/CommentController';
 import Heading from '@/components/Heading.vue';
 import TicketEditDialog from '@/components/issues/TicketEditDialog.vue';
+import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,6 +16,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { index as issuesIndex, show as issuesShow } from '@/routes/issues';
 
 type SlugRow = {
@@ -36,6 +40,13 @@ type UserRef = {
     email: string;
 };
 
+type CommentRow = {
+    id: number;
+    comment: string;
+    created_at: string | null;
+    user: UserRef | null;
+};
+
 type TicketDetail = {
     id: number;
     ticket_number: string;
@@ -55,6 +66,7 @@ type TicketDetail = {
     created_by: UserRef | null;
     updated_by: UserRef | null;
     attachments: AttachmentRef[];
+    comments: CommentRow[];
 };
 
 const props = defineProps<{
@@ -382,6 +394,79 @@ watch(attachmentOptionsOpen, (isOpen) => {
                         </Form>
                     </li>
                 </ul>
+            </div>
+
+            <div class="rounded-xl border border-border p-6">
+                <p class="mb-4 text-xs font-medium uppercase text-muted-foreground">
+                    Comments
+                </p>
+                <ul
+                    v-if="ticket.comments.length > 0"
+                    class="mb-6 space-y-4"
+                >
+                    <li
+                        v-for="c in ticket.comments"
+                        :key="c.id"
+                        class="border-b border-border pb-4 last:border-0 last:pb-0"
+                    >
+                        <p class="text-xs text-muted-foreground">
+                            <span class="font-medium text-foreground">
+                                {{ c.user?.name ?? 'Unknown' }}
+                            </span>
+                            <span
+                                v-if="c.user?.email"
+                                class="text-muted-foreground"
+                            >
+                                ({{ c.user.email }})
+                            </span>
+                            <span v-if="c.created_at">
+                                · {{ formatWhen(c.created_at) }}
+                            </span>
+                        </p>
+                        <p class="mt-2 whitespace-pre-wrap text-sm text-foreground">
+                            {{ c.comment }}
+                        </p>
+                    </li>
+                </ul>
+                <p
+                    v-else
+                    class="mb-6 text-sm text-muted-foreground"
+                >
+                    No comments yet.
+                </p>
+                <Form
+                    v-bind="CommentController.store.form(ticket)"
+                    reset-on-success
+                    class="space-y-3"
+                    :options="{ preserveScroll: true }"
+                    v-slot="{ errors, processing }"
+                >
+                    <div class="grid gap-2">
+                        <Label :for="`comment-body-${ticket.id}`">Add comment</Label>
+                        <textarea
+                            :id="`comment-body-${ticket.id}`"
+                            name="comment"
+                            rows="4"
+                            required
+                            :class="
+                                cn(
+                                    'placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+                                    'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                                    'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                                )
+                            "
+                        />
+                        <InputError :message="errors.comment" />
+                    </div>
+                    <div>
+                        <Button
+                            type="submit"
+                            :disabled="processing"
+                        >
+                            Post comment
+                        </Button>
+                    </div>
+                </Form>
             </div>
         </div>
     </div>
