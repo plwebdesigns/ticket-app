@@ -163,7 +163,7 @@ defineOptions({
                                 <Label for="ticket-attachments">Attachments</Label>
                                 <Input
                                     id="ticket-attachments"
-                                    name="attachments"
+                                    name="attachments[]"
                                     type="file"
                                     multiple
                                 />

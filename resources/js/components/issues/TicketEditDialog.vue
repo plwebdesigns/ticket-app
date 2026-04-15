@@ -276,7 +276,7 @@ function formatFileSize(bytes: number): string {
                     <Label :for="`edit-attachments-${ticket.id}`">Add attachments</Label>
                     <Input
                         :id="`edit-attachments-${ticket.id}`"
-                        name="attachments"
+                        name="attachments[]"
                         type="file"
                         multiple
                     />
