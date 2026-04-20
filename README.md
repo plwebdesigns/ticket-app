@@ -17,11 +17,10 @@ Optional but useful on macOS:
 Clone the repository (or download and extract the archive), then enter the project directory:
 
 ```bash
-git clone <repository-url> ticket-app
+git clone https://github.com/plwebdesigns/ticket-app.git
 cd ticket-app
 ```
 
-Replace `<repository-url>` with your Git remote. If you use SSH or a fork, use that URL instead.
 
 ## Install and configure
 
@@ -42,13 +41,6 @@ This will:
 5. Install JavaScript dependencies (`npm install`)
 6. Build frontend assets (`npm run build`)
 
-If you use **SQLite** (the default in `.env.example`), ensure the database file exists before migrating:
-
-```bash
-touch database/database.sqlite
-```
-
-Then run `php artisan migrate` if you skipped the full `composer setup` or migrations failed.
 
 ### Manual setup
 
@@ -58,7 +50,6 @@ If you prefer step-by-step control:
 composer install
 cp .env.example .env
 php artisan key:generate
-touch database/database.sqlite   # when using SQLite
 php artisan migrate
 npm install
 npm run build                    # or `npm run dev` while developing (see below)
